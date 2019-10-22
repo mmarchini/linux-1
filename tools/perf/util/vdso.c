@@ -238,7 +238,7 @@ static struct dso *__machine__findnew_compat(struct machine *machine,
 	const char *file_name;
 	struct dso *dso;
 
-	dso = __dsos__find(&machine->dsos, vdso_file->dso_name, true);
+	dso = __dsos__find(&machine->dsos, vdso_file->dso_name, true, NULL);
 	if (dso)
 		goto out;
 
@@ -294,21 +294,21 @@ static struct dso *machine__find_vdso(struct machine *machine,
 	dso_type = machine__thread_dso_type(machine, thread);
 	switch (dso_type) {
 	case DSO__TYPE_32BIT:
-		dso = __dsos__find(&machine->dsos, DSO__NAME_VDSO32, true);
+		dso = __dsos__find(&machine->dsos, DSO__NAME_VDSO32, true, NULL);
 		if (!dso) {
 			dso = __dsos__find(&machine->dsos, DSO__NAME_VDSO,
-					   true);
+					   true, NULL);
 			if (dso && dso_type != dso__type(dso, machine))
 				dso = NULL;
 		}
 		break;
 	case DSO__TYPE_X32BIT:
-		dso = __dsos__find(&machine->dsos, DSO__NAME_VDSOX32, true);
+		dso = __dsos__find(&machine->dsos, DSO__NAME_VDSOX32, true, NULL);
 		break;
 	case DSO__TYPE_64BIT:
 	case DSO__TYPE_UNKNOWN:
 	default:
-		dso = __dsos__find(&machine->dsos, DSO__NAME_VDSO, true);
+		dso = __dsos__find(&machine->dsos, DSO__NAME_VDSO, true, NULL);
 		break;
 	}
 
@@ -338,7 +338,7 @@ struct dso *machine__findnew_vdso(struct machine *machine,
 		goto out_unlock;
 #endif
 
-	dso = __dsos__find(&machine->dsos, DSO__NAME_VDSO, true);
+	dso = __dsos__find(&machine->dsos, DSO__NAME_VDSO, true, NULL);
 	if (!dso) {
 		char *file;
 

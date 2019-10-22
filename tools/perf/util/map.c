@@ -197,7 +197,7 @@ struct map *map__new(struct machine *machine, u64 start, u64 len,
 			pgoff = 0;
 			dso = machine__findnew_vdso(machine, thread);
 		} else
-			dso = machine__findnew_dso(machine, filename);
+			dso = machine__findnew_dso(machine, filename, nsi);
 
 		if (dso == NULL)
 			goto out_delete;

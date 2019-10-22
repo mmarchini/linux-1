@@ -60,6 +60,34 @@ void namespaces__free(struct namespaces *namespaces)
 	free(namespaces);
 }
 
+bool nsinfo__equal(struct nsinfo *lhs, struct nsinfo *rhs)
+{
+	/* If both namesmaces are the same, they are equal.
+	 */
+	if (lhs == rhs)
+		return true;
+
+	/* If one of the namespaces is null, they are not equal.
+	 */
+	if (lhs == NULL || rhs == NULL)
+		return false;
+
+	/* If one namespace needs setns and the other doesn't, they are
+	 * different.
+	 */
+	if (lhs->need_setns != rhs->need_setns)
+		return false;
+
+	/* If neither namespaces need mnt, assume they are equal.
+	 */
+	if (!lhs->need_setns)
+		return true;
+
+	/* If both namespaces have the same mntns, they are equal.
+	 */
+	return strncmp(lhs->mntns_path, rhs->mntns_path, PATH_MAX) == 0;
+}
+
 int nsinfo__init(struct nsinfo *nsi)
 {
 	char oldns[PATH_MAX];

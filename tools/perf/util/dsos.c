@@ -39,13 +39,16 @@ bool __dsos__read_build_ids(struct list_head *head, bool with_hits)
  * Either one of the dso or name parameter must be non-NULL or the
  * function will not work.
  */
-struct dso *__dsos__findnew_link_by_longname(struct rb_root *root, struct dso *dso, const char *name)
+struct dso *__dsos__findnew_link_by_longname(struct rb_root *root, struct dso *dso, const char *name, struct nsinfo *nsi)
 {
 	struct rb_node **p = &root->rb_node;
 	struct rb_node  *parent = NULL;
 
 	if (!name)
 		name = dso->long_name;
+
+	if (!nsi && dso)
+		nsi = dso->nsinfo;
 	/*
 	 * Find node with the matching name
 	 */
@@ -54,7 +57,7 @@ struct dso *__dsos__findnew_link_by_longname(struct rb_root *root, struct dso *d
 		int rc = strcmp(name, this->long_name);
 
 		parent = *p;
-		if (rc == 0) {
+		if (rc == 0 && nsinfo__equal(nsi, this->nsinfo)) {
 			/*
 			 * In case the new DSO is a duplicate of an existing
 			 * one, print a one-time warning & put the new entry
@@ -90,7 +93,7 @@ struct dso *__dsos__findnew_link_by_longname(struct rb_root *root, struct dso *d
 void __dsos__add(struct dsos *dsos, struct dso *dso)
 {
 	list_add_tail(&dso->node, &dsos->head);
-	__dsos__findnew_link_by_longname(&dsos->root, dso, NULL);
+	__dsos__findnew_link_by_longname(&dsos->root, dso, NULL, NULL);
 	/*
 	 * It is now in the linked list, grab a reference, then garbage collect
 	 * this when needing memory, by looking at LRU dso instances in the
@@ -121,24 +124,24 @@ void dsos__add(struct dsos *dsos, struct dso *dso)
 	up_write(&dsos->lock);
 }
 
-struct dso *__dsos__find(struct dsos *dsos, const char *name, bool cmp_short)
+struct dso *__dsos__find(struct dsos *dsos, const char *name, bool cmp_short, struct nsinfo *nsi)
 {
 	struct dso *pos;
 
 	if (cmp_short) {
 		list_for_each_entry(pos, &dsos->head, node)
-			if (strcmp(pos->short_name, name) == 0)
+			if (strcmp(pos->short_name, name) == 0 && nsinfo__equal(nsi, pos->nsinfo))
 				return pos;
 		return NULL;
 	}
-	return __dsos__findnew_by_longname(&dsos->root, name);
+	return __dsos__findnew_by_longname(&dsos->root, name, nsi);
 }
 
-struct dso *dsos__find(struct dsos *dsos, const char *name, bool cmp_short)
+struct dso *dsos__find(struct dsos *dsos, const char *name, bool cmp_short, struct nsinfo *nsi)
 {
 	struct dso *dso;
 	down_read(&dsos->lock);
-	dso = __dsos__find(dsos, name, cmp_short);
+	dso = __dsos__find(dsos, name, cmp_short, nsi);
 	up_read(&dsos->lock);
 	return dso;
 }
@@ -175,11 +178,12 @@ static void dso__set_basename(struct dso *dso)
 	dso__set_short_name(dso, base, true);
 }
 
-struct dso *__dsos__addnew(struct dsos *dsos, const char *name)
+struct dso *__dsos__addnew(struct dsos *dsos, const char *name, struct nsinfo *nsi)
 {
 	struct dso *dso = dso__new(name);
 
 	if (dso != NULL) {
+                dso->nsinfo = nsi;
 		__dsos__add(dsos, dso);
 		dso__set_basename(dso);
 		/* Put dso here because __dsos_add already got it */
@@ -188,18 +192,18 @@ struct dso *__dsos__addnew(struct dsos *dsos, const char *name)
 	return dso;
 }
 
-struct dso *__dsos__findnew(struct dsos *dsos, const char *name)
+struct dso *__dsos__findnew(struct dsos *dsos, const char *name, struct nsinfo *nsi)
 {
-	struct dso *dso = __dsos__find(dsos, name, false);
+	struct dso *dso = __dsos__find(dsos, name, false, nsi);
 
-	return dso ? dso : __dsos__addnew(dsos, name);
+	return dso ? dso : __dsos__addnew(dsos, name, nsi);
 }
 
-struct dso *dsos__findnew(struct dsos *dsos, const char *name)
+struct dso *dsos__findnew(struct dsos *dsos, const char *name, struct nsinfo *nsi)
 {
 	struct dso *dso;
 	down_write(&dsos->lock);
-	dso = dso__get(__dsos__findnew(dsos, name));
+	dso = dso__get(__dsos__findnew(dsos, name, nsi));
 	up_write(&dsos->lock);
 	return dso;
 }

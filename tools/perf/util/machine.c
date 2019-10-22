@@ -674,9 +674,9 @@ static struct dso *machine__findnew_module_dso(struct machine *machine,
 
 	down_write(&machine->dsos.lock);
 
-	dso = __dsos__find(&machine->dsos, m->name, true);
+	dso = __dsos__find(&machine->dsos, m->name, true, NULL);
 	if (!dso) {
-		dso = __dsos__addnew(&machine->dsos, m->name);
+		dso = __dsos__addnew(&machine->dsos, m->name, NULL);
 		if (dso == NULL)
 			goto out_unlock;
 
@@ -1629,7 +1629,7 @@ static int machine__process_kernel_mmap_event(struct machine *machine,
 		up_read(&machine->dsos.lock);
 
 		if (kernel == NULL)
-			kernel = machine__findnew_dso(machine, machine->mmap_name);
+			kernel = machine__findnew_dso(machine, machine->mmap_name, NULL);
 		if (kernel == NULL)
 			goto out_problem;
 
@@ -2725,9 +2725,9 @@ out:
 	return addr_cpumode;
 }
 
-struct dso *machine__findnew_dso(struct machine *machine, const char *filename)
+struct dso *machine__findnew_dso(struct machine *machine, const char *filename, struct nsinfo *nsi)
 {
-	return dsos__findnew(&machine->dsos, filename);
+	return dsos__findnew(&machine->dsos, filename, nsi);
 }
 
 char *machine__resolve_kernel_addr(void *vmachine, unsigned long long *addrp, char **modp)

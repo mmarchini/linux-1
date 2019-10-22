@@ -1082,7 +1082,7 @@ struct dso *machine__findnew_kernel(struct machine *machine, const char *name,
 	/*
 	 * The kernel dso could be created by build_id processing.
 	 */
-	struct dso *dso = machine__findnew_dso(machine, name);
+	struct dso *dso = machine__findnew_dso(machine, name, NULL);
 
 	/*
 	 * We need to run this in all cases, since during the build_id
@@ -1121,7 +1121,7 @@ void dso__set_long_name(struct dso *dso, const char *name, bool name_allocated)
 	dso->long_name_allocated = name_allocated;
 
 	if (root)
-		__dsos__findnew_link_by_longname(root, dso, NULL);
+		__dsos__findnew_link_by_longname(root, dso, NULL, dso->nsinfo);
 }
 
 void dso__set_short_name(struct dso *dso, const char *name, bool name_allocated)

@@ -75,11 +75,12 @@ static struct {
 	const char *dso_name;
 	struct fake_sym *syms;
 	size_t nr_syms;
+	u32 nspid;
 } fake_symbols[] = {
-	{ "perf", perf_syms, ARRAY_SIZE(perf_syms) },
-	{ "bash", bash_syms, ARRAY_SIZE(bash_syms) },
-	{ "libc", libc_syms, ARRAY_SIZE(libc_syms) },
-	{ "[kernel]", kernel_syms, ARRAY_SIZE(kernel_syms) },
+	{ "perf", perf_syms, ARRAY_SIZE(perf_syms), FAKE_PID_PERF1 },
+	{ "bash", bash_syms, ARRAY_SIZE(bash_syms), FAKE_PID_BASH },
+	{ "libc", libc_syms, ARRAY_SIZE(libc_syms), FAKE_PID_BASH },
+	{ "[kernel]", kernel_syms, ARRAY_SIZE(kernel_syms), FAKE_PID_BASH },
 };
 
 struct machine *setup_fake_machine(struct machines *machines)
@@ -127,8 +128,9 @@ struct machine *setup_fake_machine(struct machines *machines)
 	for (i = 0; i < ARRAY_SIZE(fake_symbols); i++) {
 		size_t k;
 		struct dso *dso;
+		struct nsinfo *nsi = nsinfo__new(fake_symbols[i].nspid);
 
-		dso = machine__findnew_dso(machine, fake_symbols[i].dso_name);
+		dso = machine__findnew_dso(machine, fake_symbols[i].dso_name, nsi);
 		if (dso == NULL)
 			goto out;
 

@@ -45,6 +45,7 @@ struct nscookie {
 
 int nsinfo__init(struct nsinfo *nsi);
 struct nsinfo *nsinfo__new(pid_t pid);
+bool nsinfo__equal(struct nsinfo *lhs, struct nsinfo *rhs);
 struct nsinfo *nsinfo__copy(struct nsinfo *nsi);
 void nsinfo__delete(struct nsinfo *nsi);
 

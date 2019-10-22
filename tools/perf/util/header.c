@@ -1921,7 +1921,7 @@ static int __event_process_build_id(struct perf_record_header_build_id *bev,
 		goto out;
 	}
 
-	dso = machine__findnew_dso(machine, filename);
+	dso = machine__findnew_dso(machine, filename, NULL);
 	if (dso != NULL) {
 		char sbuild_id[SBUILD_ID_SIZE];
 
