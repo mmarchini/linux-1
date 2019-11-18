@@ -748,6 +748,20 @@ static void __map_groups__insert(struct map_groups *mg, struct map *map)
 	__maps__insert_name(&mg->maps, map);
 }
 
+int map__overlap(struct map *l, struct map *r)
+{
+       if (l->start > r->start) {
+               struct map *t = l;
+               l = r;
+               r = t;
+       }
+
+       if (l->end > r->start)
+               return 1;
+
+       return 0;
+}
+
 int map_groups__fixup_overlappings(struct map_groups *mg, struct map *map, FILE *fp)
 {
 	struct maps *maps = &mg->maps;
@@ -788,6 +802,8 @@ int map_groups__fixup_overlappings(struct map_groups *mg, struct map *map, FILE 
 		 */
 		if (pos->start >= map->end)
 			break;
+                if (!map__overlap(map, pos))
+                        continue;
 
 		if (verbose >= 2) {
 
